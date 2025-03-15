@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        #display, #current-lap {
+            font-size: 2em;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+        #current-lap {
+            font-size: 1.5em;
+        }
+        .timestamp {
+            font-size: 1em;
+            color: darkblue;
+            margin-top: 5px;
+        }
+        button {
+            font-size: 1em;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        #laps-container {
+            margin-top: 20px;
+            display: inline-block;
+            width: 90%;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+            font-family: monospace;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        textarea {
+            width: 100%;
+            font-size: 1em;
+            resize: vertical;
+        }
+        #summary, #csv-content {
+            height: 120px;
+            margin-bottom: 10px;
+        }
+        .copy-button {
+            margin-top: 5px;
+        }
+        /* New color styles */
+        .green { color: green; }
+        .orange { color: darkorange; }
+        .red { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Stopwatch</h1>
+
+    <textarea id="csv-content" placeholder="CSV content will appear here..." readonly></textarea>
+    <button class="copy-button" onclick="copyToClipboard('csv-content')">Copy CSV to Clipboard</button>
+
+    <textarea id="summary" placeholder="Summary will appear here..." readonly></textarea>
+    <button class="copy-button" onclick="copyToClipboard('summary')">Copy Summary to Clipboard</button>
+    <button class="copy-button" onclick="updateTextAreas()">Update Text Areas</button>
+
+    <div id="display">00:00:00:000</div>
+    <div id="current-lap">Lap Time: 00:00:00:000</div>
+
+    <p id="start-timestamp" class="timestamp">Start Time: --</p>
+    <p id="stop-timestamp" class="timestamp">Stop Time: --</p>
+
+    <button onclick="startStopwatch()">Start</button>
+    <button onclick="stopStopwatch()">Stop</button>
+    <button onclick="resetStopwatch()">Reset</button>
+    <button onclick="recordLap()">Lap</button>
+    
+    <div id="laps-container">
+        <table id="laps-table">
+            <thead>
+                <tr>
+                    <th>Lap</th>
+                    <th>Duration</th>
+                    <th>Start</th>
+                    <th>Stop</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody id="laps-body"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let startTime = 0;
+        let elapsedTime = 0;
+        let timerInterval;
+        let running = false;
+        let lastLapTime = 0; 
+        let lapCount = 1;
+        let lastLapTimestamp = null;
+        let lapsData = [];
+
+        function startStopwatch() {
+            if (!running) {
+                startTime = Date.now() - elapsedTime;
+                timerInterval = setInterval(updateDisplay, 10);
+                running = true;
+                
+                document.getElementById("start-timestamp").innerText = "Start Time: " + formatTimestamp(new Date());
+            }
+        }
+
+        function stopStopwatch() {
+            if (running) {
+                clearInterval(timerInterval);
+                elapsedTime = Date.now() - startTime;
+                running = false;
+                document.getElementById("stop-timestamp").innerText = "Stop Time: " + formatTimestamp(new Date());
+                updateTextAreas();
+            }
+        }
+
+        function resetStopwatch() {
+            clearInterval(timerInterval);
+            elapsedTime = 0;
+            running = false;
+            lastLapTime = 0;
+            lapCount = 1;
+            lastLapTimestamp = null;
+            lapsData = [];
+            document.getElementById("display").innerText = "00:00:00:000";
+            document.getElementById("current-lap").innerHTML = "Lap Time: <span class='green'>00:00:00:000</span>";
+            document.getElementById("laps-body").innerHTML = "";
+            document.getElementById("summary").value = "";
+            document.getElementById("csv-content").value = "";
+
+            document.getElementById("start-timestamp").innerText = "Start Time: --";
+            document.getElementById("stop-timestamp").innerText = "Stop Time: --";
+        }
+
+        function updateDisplay() {
+            const now = Date.now();
+            elapsedTime = now - startTime;
+            const currentLapTime = elapsedTime - lastLapTime;
+            
+            // Update display with color
+            const displayTime = formatTime(elapsedTime);
+            document.getElementById("display").innerText = displayTime;
+            
+            // Update current lap time with color
+            const colorClass = getDurationClass(currentLapTime);
+            document.getElementById("current-lap").innerHTML = 
+                `Lap Time: <span class="${colorClass}">${formatTime(currentLapTime)}</span>`;
+        }
+
+        function formatTime(time) {
+            let hours = Math.floor(time / 3600000);
+            let minutes = Math.floor((time % 3600000) / 60000);
+            let seconds = Math.floor((time % 60000) / 1000);
+            let milliseconds = time % 1000;
+
+            return `${String(hours).padStart(2, '0')}:
+                    ${String(minutes).padStart(2, '0')}:
+                    ${String(seconds).padStart(2, '0')}:
+                    ${String(milliseconds).padStart(3, '0')}`.replace(/\s/g, '');
+        }
+
+        function formatTimestamp(date) {
+            return date.toLocaleString();
+        }
+
+        function recordLap() {
+            if (running) {
+                let now = new Date();
+                let lapTime = elapsedTime - lastLapTime;
+                let lapStart = lastLapTimestamp ? lastLapTimestamp : new Date(startTime);
+                let lapStop = now;
+
+                lastLapTime = elapsedTime; 
+                lastLapTimestamp = now;
+
+                // Determine color class
+                const colorClass = getDurationClass(lapTime);
+
+                let lapRow = document.createElement("tr");
+                lapRow.innerHTML = `
+                    <td><strong>${lapCount}</strong></td>
+                    <td><span class="${colorClass}">${formatTime(lapTime)}</span></td>
+                    <td>${formatTimestamp(lapStart)}</td>
+                    <td>${formatTimestamp(lapStop)}</td>
+                    <td><textarea oninput="updateLapNote(${lapCount - 1}, this.value)" placeholder="Notes..."></textarea></td>
+                `;
+
+                document.getElementById("laps-body").appendChild(lapRow);
+
+                lapsData.push({
+                    lap: lapCount,
+                    duration: formatTime(lapTime),
+                    start: formatTimestamp(lapStart),
+                    stop: formatTimestamp(lapStop),
+                    note: ""
+                });
+
+                lapCount++;
+            }
+        }
+
+        function getDurationClass(time) {
+            if (time < 2000) return 'green';
+            if (time <= 5000) return 'orange';
+            return 'red';
+        }
+
+        function updateLapNote(index, text) {
+            if (lapsData[index]) {
+                lapsData[index].note = text;
+            }
+        }
+
+        function generateSummary() {
+            let startTimestamp = document.getElementById("start-timestamp").innerText.replace("Start Time: ", "");
+            let stopTimestamp = running ? formatTimestamp(new Date()) : document.getElementById("stop-timestamp").innerText.replace("Stop Time: ", "");
+            let globalDuration = formatTime(elapsedTime);
+
+            let summary = `Stopwatch Summary\nStart: ${startTimestamp}\nStop: ${stopTimestamp}\nDuration: ${globalDuration}\n\nLaps:\n`;
+            lapsData.forEach(lap => {
+                summary += `Lap ${lap.lap}: ${lap.duration} (Start: ${lap.start}, Stop: ${lap.stop})\n`;
+                if (lap.note.trim()) {
+                    summary += `  Notes: ${lap.note}\n`;
+                }
+            });
+
+            document.getElementById("summary").value = summary;
+        }
+
+        function generateCSV() {
+            let csvContent = "Lap;Duration;Start;Stop;Notes\n";
+            lapsData.forEach(lap => {
+                csvContent += `${lap.lap};${lap.duration};${lap.start};${lap.stop};"${lap.note}"\n`;
+            });
+
+            document.getElementById("csv-content").value = csvContent;
+        }
+
+        function updateTextAreas() {
+            generateCSV();
+            generateSummary();
+        }
+
+        function copyToClipboard(textareaId) {
+            const textarea = document.getElementById(textareaId);
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(textarea.value)
+                    .then(() => alert("Text copied to clipboard!"))
+                    .catch(() => alert("Failed to copy text."));
+            } else {
+                alert("Clipboard API not supported in this browser.");
+            }
+        }
+    </script>
+</body>
+</html>
