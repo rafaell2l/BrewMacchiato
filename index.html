@@ -218,8 +218,8 @@
         }
 
         function getDurationClass(time) {
-            if (time < 2000) return 'green';
-            if (time <= 5000) return 'orange';
+            if (time < 300000) return 'green'; // 5 minuti
+            if (time <= 2700000) return 'orange'; // 45 minuti
             return 'red';
         }
 
