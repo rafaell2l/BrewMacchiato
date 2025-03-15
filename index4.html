@@ -110,8 +110,14 @@
         let lapsData = [];
         let lapCount = 1;
 
-        // Generate a unique key for this timer instance
-        const uniqueKey = new URLSearchParams(window.location.search).get("timerId") || Date.now();
+        // Generate or retrieve the unique key for this timer instance
+        let uniqueKey = new URLSearchParams(window.location.search).get("timerId");
+        if (!uniqueKey) {
+            uniqueKey = crypto.randomUUID(); // Use a cryptographically secure random ID
+            // Update the URL with the new timerId
+            history.replaceState(null, "", `?timerId=${uniqueKey}`);
+        }
+
         document.title = `Stopwatch - Timer ${uniqueKey}`;
 
         // Save current state to localStorage
