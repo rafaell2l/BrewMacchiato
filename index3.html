@@ -118,19 +118,21 @@
                 const state = JSON.parse(savedState);
                 startTime = state.startTime ? new Date(state.startTime) : null;
                 running = state.running;
-                lastLapTime = state.lastLapTime;
                 lapCount = state.lapCount;
-                lastLapTimestamp = state.lastLapTimestamp ? new Date(state.lastLapTimestamp) : null;
                 lapsData = state.lapsData;
 
                 // Recalculate elapsedTime and lastLapTime based on saved timestamps
                 if (running && startTime) {
                     elapsedTime = Date.now() - startTime.getTime();
+                    lastLapTimestamp = state.lastLapTimestamp ? new Date(state.lastLapTimestamp) : null;
                     if (lastLapTimestamp) {
                         lastLapTime = Date.now() - lastLapTimestamp.getTime();
+                    } else {
+                        lastLapTime = elapsedTime; // If no laps recorded, set lastLapTime to elapsedTime
                     }
                 } else {
                     elapsedTime = state.elapsedTime;
+                    lastLapTime = state.lastLapTime;
                 }
 
                 // Restore display
