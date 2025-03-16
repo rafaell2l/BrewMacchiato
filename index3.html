@@ -315,9 +315,9 @@
 
         // Get duration class based on time
         function getDurationClass(time) {
-            if (time < 300000) return 'green'; // 5 minutes
-            if (time <= 2700000) return 'orange'; // 45 minutes
-            return 'red';
+            if (time < 180000) return 'green'; // 3 minutes
+            if (time >= 2700000) return 'red'; // 45 minutes
+            //return 'red';
         }
 
         // Update lap note
