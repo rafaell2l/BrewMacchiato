@@ -141,7 +141,7 @@
                     const lapRow = document.createElement("tr");
                     lapRow.innerHTML = `
                         <td><strong>${lap.lap}</strong></td>
-                        <td><span class="${getDurationClass(parseTime(lap.duration))}">${lap.duration}</span></td>
+                        <td class="${getDurationClass(parseTime(lap.duration))}"><span>${lap.duration}</span></td>
                         <td>${lap.start}</td>
                         <td>${lap.stop}</td>
                         <td><textarea oninput="updateLapNote(${index}, this.value)" placeholder="Notes...">${lap.note}</textarea></td>
@@ -290,7 +290,7 @@
                 let lapRow = document.createElement("tr");
                 lapRow.innerHTML = `
                     <td><strong>${lapCount}</strong></td>
-                    <td><span class="${colorClass}">${formatTime(lapTime)}</span></td>
+                    <td class="${colorClass}"><span>${formatTime(lapTime)}</span></td>
                     <td>${formatTimestamp(lapStart)}</td>
                     <td>${formatTimestamp(lapStop)}</td>
                     <td><textarea oninput="updateLapNote(${lapCount - 1}, this.value)" placeholder="Notes..."></textarea></td>
