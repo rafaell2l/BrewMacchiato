@@ -63,6 +63,7 @@
         .green { color: green; }
         .orange { color: darkorange; }
         .red { color: red; }
+        .red-hour { color: red; background: seashell;}
     </style>
 </head>
 <body>
@@ -316,6 +317,7 @@
         // Get duration class based on time
         function getDurationClass(time) {
             if (time < 180000) return 'green'; // 3 minutes
+            if (time >= 2700000) return 'red-hour'; // 45 minutes
             if (time >= 1080000) return 'red'; // 18 minutes
             //return 'red';
         }
