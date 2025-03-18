@@ -77,11 +77,13 @@
     </div>
 
     <!-- File Selection Interface -->
+    <!-- Updated File Selection Interface -->
 <div style="margin: 20px;">
     <label for="saved-files">Select a file:</label>
-    <select id="saved-files" onchange="loadSelectedState()">
+    <select id="saved-files">
         <option value="">-- No files loaded --</option>
     </select>
+    <button onclick="loadSelectedState()">Load</button>
     <button onclick="deleteSelectedState()">Delete Selected</button>
 </div>
     
@@ -404,12 +406,15 @@ function updateFileList() {
     });
 }
 
-// Carica lo stato selezionato
+// Updated loadSelectedState function
 function loadSelectedState() {
     const select = document.getElementById("saved-files");
     const selectedKey = select.value;
     
-    if (!selectedKey) return;
+    if (!selectedKey) {
+        alert("No file selected.");
+        return;
+    }
     
     const savedState = localStorage.getItem(selectedKey);
     if (savedState) {
@@ -418,6 +423,8 @@ function loadSelectedState() {
         window.location.reload();
     }
 }
+
+// The rest of the JavaScript remains unchanged
 
 // Cancella lo stato selezionato
 // Delete the selected stopwatch state
