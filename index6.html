@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch with Multi-File Import</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        #display, #current-lap {
+            font-size: 2em;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+        button {
+            font-size: 1em;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        #laps-container {
+            margin-top: 20px;
+            display: inline-block;
+            width: 100%;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        textarea {
+            width: 95%;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stopwatch v5</h1>
+    
+    <!-- Import/Export Controls -->
+    <div style="margin: 20px;">
+        <button onclick="exportState()">Export State</button>
+        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importState()">
+        <button onclick="document.getElementById('import-file').click()">Import State</button>
+    </div>
+
+    <!-- File Selection Interface -->
+    <div style="margin: 20px;">
+        <label for="saved-files">Select a file:</label>
+        <select id="saved-files" onchange="loadSelectedState()">
+            <option value="">-- No files loaded --</option>
+        </select>
+        <button onclick="deleteSelectedState()">Delete Selected</button>
+    </div>
+    
+    <div id="display">00:00:00:000</div>
+    <div id="current-lap">Lap Time: 00:00:00:000</div>
+    
+    <button onclick="startStopwatch()">Start</button>
+    <button onclick="stopStopwatch()">Stop</button>
+    <button onclick="resetStopwatch()">Reset</button>
+    <button onclick="recordLap()">Lap</button>
+    
+    <div id="laps-container">
+        <table id="laps-table">
+            <thead>
+                <tr>
+                    <th>Lap</th>
+                    <th>Duration</th>
+                    <th>Start</th>
+                    <th>Stop</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody id="laps-body"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let startTime = null;
+        let elapsedTime = 0;
+        let timerInterval;
+        let running = false;
+        let lapsData = [];
+        let lapCount = 1;
+
+        function loadState() {
+            const savedState = localStorage.getItem("stopwatchState");
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                startTime = state.startTime ? new Date(state.startTime) : null;
+                elapsedTime = state.elapsedTime || 0;
+                running = state.running;
+                lapCount = state.lapCount || 1;
+                lapsData = state.lapsData || [];
+
+                document.getElementById("display").innerText = formatTime(elapsedTime);
+                
+                if (running && startTime) {
+                    timerInterval = setInterval(updateDisplay, 10);
+                }
+
+                updateLapsTable();
+            }
+        }
+
+        function saveState() {
+            const state = {
+                startTime: startTime ? startTime.toISOString() : null,
+                elapsedTime,
+                running,
+                lapCount,
+                lapsData
+            };
+            localStorage.setItem("stopwatchState", JSON.stringify(state));
+        }
+
+        function exportState() {
+            const state = localStorage.getItem("stopwatchState");
+            if (!state) {
+                alert("No data to export");
+                return;
+            }
+            const blob = new Blob([state], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "stopwatch_state.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importState() {
+            const fileInput = document.getElementById('import-file');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedState = JSON.parse(e.target.result);
+                    const fileName = file.name.replace(".json", "");
+                    const storageKey = `stopwatchState_${fileName}`;
+                    localStorage.setItem(storageKey, JSON.stringify(importedState));
+                    updateFileList();
+                    alert(`State "${fileName}" imported successfully.`);
+                } catch (error) {
+                    alert("Invalid file format.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function updateFileList() {
+            const savedFiles = Object.keys(localStorage).filter(key => key.startsWith("stopwatchState_"));
+            const select = document.getElementById("saved-files");
+            select.innerHTML = '<option value="">-- No files loaded --</option>';
+            savedFiles.forEach(key => {
+                const option = document.createElement("option");
+                option.value = key;
+                option.textContent = key.replace("stopwatchState_", "");
+                select.appendChild(option);
+            });
+        }
+
+        function loadSelectedState() {
+            const select = document.getElementById("saved-files");
+            const selectedKey = select.value;
+            if (!selectedKey) return;
+            const savedState = localStorage.getItem(selectedKey);
+            if (savedState) {
+                localStorage.setItem("stopwatchState", savedState);
+                alert("State loaded. Reloading...");
+                window.location.reload();
+            }
+        }
+
+        function deleteSelectedState() {
+            const select = document.getElementById("saved-files");
+            const selectedKey = select.value;
+            if (!selectedKey) {
+                alert("No file selected.");
+                return;
+            }
+            if (confirm(`Delete file "${selectedKey.replace("stopwatchState_", "")}"?`)) {
+                localStorage.removeItem(selectedKey);
+                updateFileList();
+                alert("File deleted.");
+            }
+        }
+
+        function startStopwatch() {
+            if (!running) {
+                startTime = new Date(Date.now() - elapsedTime);
+                timerInterval = setInterval(updateDisplay, 10);
+                running = true;
+                saveState();
+            }
+        }
+
+        function stopStopwatch() {
+            if (running) {
+                clearInterval(timerInterval);
+                elapsedTime = Date.now() - startTime.getTime();
+                running = false;
+                saveState();
+            }
+        }
+
+        function resetStopwatch() {
+            clearInterval(timerInterval);
+            elapsedTime = 0;
+            running = false;
+            lapCount = 1;
+            lapsData = [];
+            startTime = null;
+            document.getElementById("display").innerText = "00:00:00:000";
+            document.getElementById("laps-body").innerHTML = "";
+            localStorage.removeItem("stopwatchState");
+        }
+
+        function updateDisplay() {
+            elapsedTime = Date.now() - startTime.getTime();
+            document.getElementById("display").innerText = formatTime(elapsedTime);
+        }
+
+        function formatTime(time) {
+            let seconds = Math.floor((time / 1000) % 60);
+            let milliseconds = time % 1000;
+            return `00:00:${String(seconds).padStart(2, '0')}:${String(milliseconds).padStart(3, '0')}`;
+        }
+
+        window.onload = () => {
+            updateFileList();
+            loadState();
+        };
+    </script>
+</body>
+</html>
