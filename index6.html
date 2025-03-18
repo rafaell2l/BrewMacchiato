@@ -420,9 +420,10 @@ function loadSelectedState() {
 }
 
 // Cancella lo stato selezionato
+// Delete the selected stopwatch state
 function deleteSelectedState() {
     const select = document.getElementById("saved-files");
-    const selectedKey = select.value;
+    const selectedKey = select.options[select.selectedIndex]?.value;
 
     if (!selectedKey) {
         alert("No file selected.");
@@ -432,6 +433,9 @@ function deleteSelectedState() {
     if (confirm(`Delete file "${selectedKey.replace("stopwatchState_", "")}"?`)) {
         localStorage.removeItem(selectedKey);
         updateFileList();
+
+        // Reset selection after deletion
+        select.selectedIndex = 0;
         alert("File deleted.");
     }
 }
