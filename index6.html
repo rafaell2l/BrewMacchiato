@@ -421,22 +421,21 @@ function loadSelectedState() {
 
 // Cancella lo stato selezionato
 // Delete the selected stopwatch state
+// Delete the selected stopwatch state
 function deleteSelectedState() {
     const select = document.getElementById("saved-files");
-    const selectedKey = select.options[select.selectedIndex]?.value;
-
-    if (!selectedKey) {
+    
+    if (select.selectedIndex === -1 || select.value === "") {
         alert("No file selected.");
         return;
     }
 
+    const selectedKey = select.value;
+
     if (confirm(`Delete file "${selectedKey.replace("stopwatchState_", "")}"?`)) {
         localStorage.removeItem(selectedKey);
         updateFileList();
-
-        // Reset selection after deletion
-        select.selectedIndex = 0;
-        alert("File deleted.");
+        alert(`File "${selectedKey.replace("stopwatchState_", "")}" deleted.`);
     }
 }
 
