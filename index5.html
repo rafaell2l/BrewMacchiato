@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stopwatch</title>
+    <title>Stopwatch with Import/Export</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -68,20 +68,25 @@
 </head>
 <body>
     <h1>Stopwatch v4</h1>
-
+    
+    <!-- Import/Export Controls -->
+    <div style="margin: 20px;">
+        <button onclick="exportState()">Export State</button>
+        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importState()">
+        <button onclick="document.getElementById('import-file').click()">Import State</button>
+    </div>
+    
     <textarea id="csv-content" placeholder="CSV content will appear here..." readonly></textarea>
     <button class="copy-button" onclick="copyToClipboard('csv-content')">Copy CSV to Clipboard</button>
-
     <textarea id="summary" placeholder="Summary will appear here..." readonly></textarea>
     <button class="copy-button" onclick="copyToClipboard('summary')">Copy Summary to Clipboard</button>
     <button class="copy-button" onclick="updateTextAreas()">Update Text Areas</button>
-
+    
     <div id="display">00:00:00:000</div>
     <div id="current-lap">Lap Time: 00:00:00:000</div>
-
     <p id="start-timestamp" class="timestamp">Start Time: --</p>
     <p id="stop-timestamp" class="timestamp">Stop Time: --</p>
-
+    
     <button onclick="startStopwatch()">Start</button>
     <button onclick="stopStopwatch()">Stop</button>
     <button onclick="resetStopwatch()">Reset</button>
@@ -103,11 +108,11 @@
     </div>
 
     <script>
-        let startTime = null; // Global start time
+        let startTime = null;
         let elapsedTime = 0;
         let timerInterval;
         let running = false;
-        let lastLapTimestamp = null; // End time of the last lap (or start time if no laps recorded)
+        let lastLapTimestamp = null;
         let lapsData = [];
         let lapCount = 1;
 
@@ -120,23 +125,19 @@
                 running = state.running;
                 lapCount = state.lapCount;
                 lapsData = state.lapsData;
-
-                // Recalculate elapsedTime based on saved timestamps
+                
                 if (running && startTime) {
                     elapsedTime = Date.now() - startTime.getTime();
                 } else {
                     elapsedTime = state.elapsedTime;
                 }
-
-                // Restore lastLapTimestamp
+                
                 lastLapTimestamp = state.lastLapTimestamp ? new Date(state.lastLapTimestamp) : null;
-
-                // Restore display
+                
                 document.getElementById("display").innerText = formatTime(elapsedTime);
                 document.getElementById("start-timestamp").innerText = "Start Time: " + (state.startTime ? formatTimestamp(new Date(state.startTime)) : "--");
                 document.getElementById("stop-timestamp").innerText = "Stop Time: " + (state.stopTime ? state.stopTime : "--");
-
-                // Restore laps table
+                
                 lapsData.forEach((lap, index) => {
                     const lapRow = document.createElement("tr");
                     lapRow.innerHTML = `
@@ -148,13 +149,10 @@
                     `;
                     document.getElementById("laps-body").appendChild(lapRow);
                 });
-
-                // Restart timer if it was running
+                
                 if (running) {
                     timerInterval = setInterval(updateDisplay, 10);
                 }
-
-                // Update current lap time display
                 updateCurrentLapTime();
             }
         }
@@ -173,20 +171,59 @@
             localStorage.setItem("stopwatchState", JSON.stringify(state));
         }
 
-        // Helper function to parse time string back to milliseconds
+        // Export functionality
+        function exportState() {
+            const state = localStorage.getItem("stopwatchState");
+            if (!state) {
+                alert("No stopwatch data to export");
+                return;
+            }
+            const blob = new Blob([state], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "stopwatch_state.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Import functionality
+        function importState() {
+            const fileInput = document.getElementById('import-file');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedState = JSON.parse(e.target.result);
+                    if (!importedState.startTime || !importedState.lapsData) {
+                        throw new Error("Invalid state format");
+                    }
+                    localStorage.setItem("stopwatchState", JSON.stringify(importedState));
+                    alert("State imported successfully. Reloading...");
+                    window.location.reload();
+                } catch (error) {
+                    alert("Invalid file format. Please import a valid stopwatch state file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Existing stopwatch functions (unchanged)
         function parseTime(timeString) {
             const [hours, minutes, seconds, milliseconds] = timeString.split(":").map(Number);
             return hours * 3600000 + minutes * 60000 + seconds * 1000 + milliseconds;
         }
 
-        // Start stopwatch
         function startStopwatch() {
             if (!running) {
                 if (!startTime) {
-                    startTime = new Date(); // Set global start time
-                    lastLapTimestamp = startTime; // Initialize lastLapTimestamp to start time
+                    startTime = new Date();
+                    lastLapTimestamp = startTime;
                 } else {
-                    // If resuming, adjust start time to account for the elapsed time
                     startTime = new Date(Date.now() - elapsedTime);
                 }
                 timerInterval = setInterval(updateDisplay, 10);
@@ -196,7 +233,6 @@
             }
         }
 
-        // Stop stopwatch
         function stopStopwatch() {
             if (running) {
                 clearInterval(timerInterval);
@@ -208,7 +244,6 @@
             }
         }
 
-        // Reset stopwatch
         function resetStopwatch() {
             clearInterval(timerInterval);
             elapsedTime = 0;
@@ -217,76 +252,55 @@
             lapsData = [];
             lapCount = 1;
             startTime = null;
-
             document.getElementById("display").innerText = "00:00:00:000";
             document.getElementById("current-lap").innerHTML = "Lap Time: <span class='green'>00:00:00:000</span>";
             document.getElementById("laps-body").innerHTML = "";
             document.getElementById("summary").value = "";
             document.getElementById("csv-content").value = "";
-
             document.getElementById("start-timestamp").innerText = "Start Time: --";
             document.getElementById("stop-timestamp").innerText = "Stop Time: --";
-
-            // Clear saved state
             localStorage.removeItem("stopwatchState");
         }
 
-        // Update display
         function updateDisplay() {
             const now = Date.now();
             elapsedTime = now - startTime.getTime();
-
-            // Update global running time display
-            const displayTime = formatTime(elapsedTime);
-            document.getElementById("display").innerText = displayTime;
-
-            // Update current lap time display
+            document.getElementById("display").innerText = formatTime(elapsedTime);
             updateCurrentLapTime();
         }
 
-        // Update current lap time display
         function updateCurrentLapTime() {
             const now = Date.now();
             const currentLapTime = lastLapTimestamp ? now - lastLapTimestamp.getTime() : elapsedTime;
-
-            // Update current lap time with color
             const colorClass = getDurationClass(currentLapTime);
             document.getElementById("current-lap").innerHTML = 
                 `Lap Time: <span class="${colorClass}">${formatTime(currentLapTime)}</span>`;
         }
 
-        // Format time as HH:MM:SS:MS
         function formatTime(time) {
             let hours = Math.floor(time / 3600000);
             let minutes = Math.floor((time % 3600000) / 60000);
             let seconds = Math.floor((time % 60000) / 1000);
             let milliseconds = time % 1000;
-
             return `${String(hours).padStart(2, '0')}:
                     ${String(minutes).padStart(2, '0')}:
                     ${String(seconds).padStart(2, '0')}:
                     ${String(milliseconds).padStart(3, '0')}`.replace(/\s/g, '');
         }
 
-        // Format timestamp as local date/time
         function formatTimestamp(date) {
             return date.toLocaleString();
         }
 
-        // Record a lap
         function recordLap() {
             if (running) {
                 const now = new Date();
                 const lapTime = lastLapTimestamp ? now - lastLapTimestamp.getTime() : elapsedTime;
                 const lapStart = lastLapTimestamp ? lastLapTimestamp : startTime;
                 const lapStop = now;
-
-                // Update lastLapTimestamp to the current time
                 lastLapTimestamp = now;
-
                 const colorClass = getDurationClass(lapTime);
-
-                // Append new lap row to the table
+                
                 let lapRow = document.createElement("tr");
                 lapRow.innerHTML = `
                     <td><strong>${lapCount}</strong></td>
@@ -296,8 +310,7 @@
                     <td><textarea oninput="updateLapNote(${lapCount - 1}, this.value)" placeholder="Notes..."></textarea></td>
                 `;
                 document.getElementById("laps-body").appendChild(lapRow);
-
-                // Save lap data
+                
                 lapsData.push({
                     lap: lapCount,
                     duration: formatTime(lapTime),
@@ -305,24 +318,18 @@
                     stop: formatTimestamp(lapStop),
                     note: ""
                 });
-
                 lapCount++;
                 saveState();
-
-                // Update current lap time display
                 updateCurrentLapTime();
             }
         }
 
-        // Get duration class based on time
         function getDurationClass(time) {
-            if (time < 180000) return 'green'; // 3 minutes
-            if (time >= 2700000) return 'red-hour'; // 45 minutes
-            if (time >= 1080000) return 'red'; // 18 minutes
-            //return 'red';
+            if (time < 180000) return 'green';
+            if (time >= 2700000) return 'red-hour';
+            if (time >= 1080000) return 'red';
         }
 
-        // Update lap note
         function updateLapNote(index, text) {
             if (lapsData[index]) {
                 lapsData[index].note = text;
@@ -330,40 +337,34 @@
             }
         }
 
-        // Generate summary
         function generateSummary() {
             let startTimestamp = document.getElementById("start-timestamp").innerText.replace("Start Time: ", "");
             let stopTimestamp = running ? formatTimestamp(new Date()) : document.getElementById("stop-timestamp").innerText.replace("Stop Time: ", "");
             let globalDuration = formatTime(elapsedTime);
-
-            let summary = `Stopwatch Summary\nStart: ${startTimestamp}\nStop: ${stopTimestamp}\nDuration: ${globalDuration}\n\nLaps:\n`;
+            let summary = `Stopwatch Summary\nStart: ${startTimestamp}\nStop: ${stopTimestamp}\nDuration: ${globalDuration}\nLaps:\n`;
+            
             lapsData.forEach(lap => {
                 summary += `Lap ${lap.lap}: ${lap.duration} (Start: ${lap.start}, Stop: ${lap.stop})\n`;
                 if (lap.note.trim()) {
                     summary += `  Notes: ${lap.note}\n`;
                 }
             });
-
             document.getElementById("summary").value = summary;
         }
 
-        // Generate CSV
         function generateCSV() {
             let csvContent = "Lap;Duration;Start;Stop;Notes\n";
             lapsData.forEach(lap => {
                 csvContent += `${lap.lap};${lap.duration};${lap.start};${lap.stop};"${lap.note}"\n`;
             });
-
             document.getElementById("csv-content").value = csvContent;
         }
 
-        // Update text areas
         function updateTextAreas() {
             generateCSV();
             generateSummary();
         }
 
-        // Copy text to clipboard
         function copyToClipboard(textareaId) {
             const textarea = document.getElementById(textareaId);
             if (navigator.clipboard) {
@@ -375,7 +376,6 @@
             }
         }
 
-        // Initialize the app
         window.onload = () => {
             loadState();
         };
