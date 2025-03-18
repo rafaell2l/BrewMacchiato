@@ -68,6 +68,9 @@
 </head>
 <body>
     <h1>Stopwatch v4</h1>
+
+    <!-- Add this div under the title -->
+<div id="current-file-display" style="margin: 10px; font-weight: bold; color: #2c3e50;"></div>
     
     <!-- Import/Export Controls -->
     <div style="margin: 20px;">
@@ -160,6 +163,11 @@
                     `;
                     document.getElementById("laps-body").appendChild(lapRow);
                 });
+
+                // Add to loadState function (inside the if(savedState) block)
+document.getElementById('current-file-display').textContent = 
+    `Loaded File: ${localStorage.getItem("stopwatchState") ? "Current Session" : "None"}`;
+
                 
                 if (running) {
                     timerInterval = setInterval(updateDisplay, 10);
@@ -392,37 +400,6 @@
         //};
 
 
-        // Mantiene traccia dei file importati
-function updateFileList() {
-    const savedFiles = Object.keys(localStorage).filter(key => key.startsWith("stopwatchState_"));
-    const select = document.getElementById("saved-files");
-    select.innerHTML = '<option value="">-- No files loaded --</option>';
-    
-    savedFiles.forEach(key => {
-        const option = document.createElement("option");
-        option.value = key;
-        option.textContent = key.replace("stopwatchState_", "");
-        select.appendChild(option);
-    });
-}
-
-// Updated loadSelectedState function
-function loadSelectedState() {
-    const select = document.getElementById("saved-files");
-    const selectedKey = select.value;
-    
-    if (!selectedKey) {
-        alert("No file selected.");
-        return;
-    }
-    
-    const savedState = localStorage.getItem(selectedKey);
-    if (savedState) {
-        localStorage.setItem("stopwatchState", savedState);
-        alert("State loaded. Reloading...");
-        window.location.reload();
-    }
-}
 
 // The rest of the JavaScript remains unchanged
 
@@ -446,7 +423,13 @@ function deleteSelectedState() {
     }
 }
 
-// Modifica l'importazione per supportare più file
+// Add this function to generate timestamp filenames
+function getTimestampFilename() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
+}
+
+// Modified importState function
 function importState() {
     const fileInput = document.getElementById('import-file');
     const file = fileInput.files[0];
@@ -460,18 +443,59 @@ function importState() {
                 throw new Error("Invalid state format");
             }
             
-            const fileName = file.name.replace(".json", "");
-            const storageKey = `stopwatchState_${fileName}`;
+            // Use timestamp instead of original filename
+            const fileName = `stopwatchState_${getTimestampFilename()}`;
             
-            localStorage.setItem(storageKey, JSON.stringify(importedState));
+            localStorage.setItem(fileName, JSON.stringify(importedState));
             updateFileList();
-            alert(`State "${fileName}" imported successfully.`);
+            alert(`State "${fileName.replace('stopwatchState_', '')}" imported successfully.`);
         } catch (error) {
             alert("Invalid file format. Please import a valid stopwatch state file.");
         }
     };
     reader.readAsText(file);
 }
+
+// Modified loadSelectedState function
+function loadSelectedState() {
+    const select = document.getElementById("saved-files");
+    const selectedKey = select.value;
+    
+    if (!selectedKey) {
+        alert("No file selected.");
+        return;
+    }
+    
+    const savedState = localStorage.getItem(selectedKey);
+    if (savedState) {
+        localStorage.setItem("stopwatchState", savedState);
+        document.getElementById('current-file-display').textContent = 
+            `Loaded File: ${selectedKey.replace("stopwatchState_", "")}`;
+        alert("State loaded. Reloading...");
+        window.location.reload();
+    }
+}
+
+
+// Update updateFileList function
+function updateFileList() {
+    const savedFiles = Object.keys(localStorage).filter(key => key.startsWith("stopwatchState_"));
+    const select = document.getElementById("saved-files");
+    select.innerHTML = '<option value="">-- No files loaded --</option>';
+    
+    savedFiles.forEach(key => {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = key.replace("stopwatchState_", "");
+        select.appendChild(option);
+    });
+    
+    // Update current file display when list changes
+    if (!localStorage.getItem("stopwatchState")) {
+        document.getElementById('current-file-display').textContent = "Loaded File: None";
+    }
+}
+        
 
 // Aggiorna la lista dei file all'avvio
 window.onload = () => {
