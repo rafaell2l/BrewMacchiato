@@ -53,7 +53,7 @@
             font-size: 1em;
             resize: vertical;
         }
-        #summary, #csv-content {
+        #summary, #csv-content, #json-content {
             height: 120px;
             margin-bottom: 10px;
         }
@@ -280,6 +280,7 @@ document.getElementById('current-file-display').textContent =
             document.getElementById("laps-body").innerHTML = "";
             document.getElementById("summary").value = "";
             document.getElementById("csv-content").value = "";
+            document.getElementById("json-content").value = "";
             document.getElementById("start-timestamp").innerText = "Start Time: --";
             document.getElementById("stop-timestamp").innerText = "Stop Time: --";
             localStorage.removeItem("stopwatchState");
