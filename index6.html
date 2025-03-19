@@ -92,6 +92,9 @@
     
     <textarea id="csv-content" placeholder="CSV content will appear here..." readonly></textarea>
     <button class="copy-button" onclick="copyToClipboard('csv-content')">Copy CSV to Clipboard</button>
+    <!-- New JSON section added -->
+    <textarea id="json-content" placeholder="JSON state will appear here..." readonly></textarea>
+    <button class="copy-button" onclick="copyToClipboard('json-content')">Copy JSON to Clipboard</button>
     <textarea id="summary" placeholder="Summary will appear here..." readonly></textarea>
     <button class="copy-button" onclick="copyToClipboard('summary')">Copy Summary to Clipboard</button>
     <button class="copy-button" onclick="updateTextAreas()">Update Text Areas</button>
@@ -172,6 +175,7 @@ document.getElementById('current-file-display').textContent =
                 if (running) {
                     timerInterval = setInterval(updateDisplay, 10);
                 }
+                generateJSON();
                 updateCurrentLapTime();
             }
         }
@@ -382,6 +386,7 @@ document.getElementById('current-file-display').textContent =
         function updateTextAreas() {
             generateCSV();
             generateSummary();
+            generateJSON(); // New addition
         }
 
         function copyToClipboard(textareaId) {
@@ -495,6 +500,17 @@ function updateFileList() {
         document.getElementById('current-file-display').textContent = "Loaded File: None";
     }
 }
+
+
+        // New function to generate JSON content
+        function generateJSON() {
+            const savedState = localStorage.getItem("stopwatchState");
+            const prettyJSON = savedState ? JSON.stringify(JSON.parse(savedState), null, 2) : "";
+            document.getElementById("json-content").value = prettyJSON;
+        }
+
+
+
         
 
 // Aggiorna la lista dei file all'avvio
