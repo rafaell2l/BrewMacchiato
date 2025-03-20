@@ -385,10 +385,31 @@
             });
 
             const totals = calculateCategoryTotals();
-            summary += '\nCategory Totals:\n';
-            Object.entries(totals).forEach(([category, totalMs]) => {
-                summary += `${category}: ${formatTime(totalMs)}\n`;
+            const totalsArray = Object.entries(totals).map(([category, duration]) => ({ category, duration }));
+            
+            // Sort using same logic as category totals table
+            totalsArray.sort((a, b) => {
+                if (currentSortColumn === 'category') {
+                    return currentSortOrder === 'asc' 
+                        ? a.category.localeCompare(b.category) 
+                        : b.category.localeCompare(a.category);
+                } else {
+                    return currentSortOrder === 'asc' 
+                        ? a.duration - b.duration 
+                        : b.duration - a.duration;
+                }
             });
+
+            // Add sorted totals to summary
+            summary += '\nCategory Totals:\n';
+            totalsArray.forEach(item => {
+                summary += `${item.category}: ${formatTime(item.duration)}\n`;
+            });
+            
+            //summary += '\nCategory Totals:\n';
+            //Object.entries(totals).forEach(([category, totalMs]) => {
+                //summary += `${category}: ${formatTime(totalMs)}\n`;
+            //});
 
             document.getElementById("summary").value = summary;
         }
