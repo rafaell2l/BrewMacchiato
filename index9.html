@@ -5,7 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stopwatch with Categories</title>
     <style>
-        /* [Original CSS styles remain unchanged] */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        #display, #current-lap {
+            font-size: 2em;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+        #current-lap {
+            font-size: 1.5em;
+        }
+        .timestamp {
+            font-size: 1em;
+            color: darkblue;
+            margin-top: 5px;
+        }
+        button {
+            font-size: 1em;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        #laps-container {
+            margin-top: 20px;
+            display: inline-block;
+            width: 100%;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+            font-family: monospace;
+        }
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+        textarea {
+            width: 95%;
+            font-size: 1em;
+            resize: vertical;
+        }
+        #summary, #csv-content {
+            height: 120px;
+            margin-bottom: 10px;
+        }
+        .copy-button {
+            margin-top: 5px;
+        }
+        .green { color: green; }
+        .orange { color: darkorange; }
+        .red { color: red; }
+        .red-hour { color: red; background: seashell;}
+        .totals-table {
+            width: 50%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        .totals-table th, .totals-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        .totals-table th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+        .sort-icon {
+            margin-left: 5px;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 <body>
