@@ -86,7 +86,36 @@
     </style>
 </head>
 <body>
-    <!-- [Original HTML structure remains unchanged] -->
+    <h1>Stopwatch v6</h1>
+    <textarea id="csv-content" placeholder="CSV content will appear here..." readonly></textarea>
+    <button class="copy-button" onclick="copyToClipboard('csv-content')">Copy CSV to Clipboard</button>
+    <textarea id="summary" placeholder="Summary will appear here..." readonly></textarea>
+    <button class="copy-button" onclick="copyToClipboard('summary')">Copy Summary to Clipboard</button>
+    <button class="copy-button" onclick="updateTextAreas()">Update Text Areas</button>
+    <div id="display">00:00:00:000</div>
+    <div id="current-lap">Lap Time: 00:00:00:000</div>
+    <p id="start-timestamp" class="timestamp">Start Time: --</p>
+    <p id="stop-timestamp" class="timestamp">Stop Time: --</p>
+    <button onclick="startStopwatch()">Start</button>
+    <button onclick="stopStopwatch()">Stop</button>
+    <button onclick="resetStopwatch()">Reset</button>
+    <button onclick="recordLap()">Lap</button>
+    <div id="laps-container">
+        <table id="laps-table">
+            <thead>
+                <tr>
+                    <th>Lap</th>
+                    <th>Duration</th>
+                    <th>Start</th>
+                    <th>Stop</th>
+                    <th>Notes</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+            <tbody id="laps-body"></tbody>
+        </table>
+    </div>
+    <div id="category-totals"></d
 
     <script>
         let startTime = null;
