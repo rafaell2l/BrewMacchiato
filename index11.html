@@ -389,7 +389,7 @@
             lapsData.forEach(lap => {
                 summary += `Lap ${lap.lap}: ${lap.duration} (Start: ${lap.start}, Stop: ${lap.stop})\n`;
                 if (lap.note.trim()) summary += `  Notes: ${lap.note}\n`;
-                if (lap.category.trim()) summary += `  Category: ${lap.category}\n`;
+                if (lap.category.trim()) summary += `  Category: ${lap.category}\n\n`;
             });
 
             document.getElementById("summary").value = summary;
