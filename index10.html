@@ -328,7 +328,7 @@
             html += '</table>';
             document.getElementById('category-totals').innerHTML = html;
         }
-        function evRighe(ch) {
+        /*function evRighe(ch) {
           const rows = document.getElementsByClassName('rows');
           //alert(ch.parentElement.firstElementChild.innerText);
           //alert(ch.parentElement.parentElement.firstElementChild.innerText);
@@ -339,7 +339,18 @@
             ch.checked ? row.classList.add('rows-selected')
               : row.classList.remove('rows-selected')
           }}
-        }
+        }*/
+
+        function evRighe(checkbox) {
+  const categoryName = checkbox.closest('tr').querySelector('td:first-child').textContent;
+  
+  document.querySelectorAll('#laps-body tr').forEach(row => {
+    const rowCategory = row.querySelector('td:nth-child(6) textarea').value.trim();
+    if (rowCategory === categoryName) {
+      row.classList.toggle('rows-selected', checkbox.checked);
+    }
+  });
+}
 
         function generateSummary() {
             const startTimestamp = document.getElementById("start-timestamp").innerText.replace("Start Time: ", "");
