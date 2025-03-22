@@ -386,8 +386,8 @@
 
             const totals = calculateCategoryTotals();
             summary += '\nCategory Totals:\n';
-            Object.entries(totals).forEach(([category, totalMs]) => {
-                summary += `${category}: ${formatTime(totalMs)}\n`;
+            Object.entries(totals).forEach(([category, {total, count}]) => {
+                summary += `${category}: ${formatTime(total)}\n`;
             });
 
             document.getElementById("summary").value = summary;
