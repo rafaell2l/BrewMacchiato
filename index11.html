@@ -336,7 +336,7 @@
             let html = '<h3>Category Totals</h3><table class="totals-table">';
             html += '<tr><th>Category</th><th>Total Duration</th><th>Laps</th><th>Rows</th></tr>';
             
-            Object.entries(totals).forEach(([category, {total, count}]) => {
+            Object.entries(totals).forEach(([category, {count, total}]) => {
                 html += `<tr>
                     <td>${category}</td>
                     <td class="${getDurationClass(total)}">${formatTime(total)}</td>
@@ -386,7 +386,7 @@
 
             const totals = calculateCategoryTotals();
             summary += '\nCategory Totals:\n';
-            Object.entries(totals).forEach(([category, {total, count}]) => {
+            Object.entries(totals).forEach(([category, {count, total}]) => {
                 summary += `${category}: ${formatTime(total)}\n`;
             });
 
