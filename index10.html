@@ -330,8 +330,8 @@
         }
         function evRighe(ch) {
           const rows = document.getElementsByClassName('rows');
-          alert(this.parentElement.firstElementChild.innerText);
-          alert(this.parentElement.parentElement.firstElementChild.innerText);
+          alert(ch.parentElement.firstElementChild.innerText);
+          alert(ch.parentElement.parentElement.firstElementChild.innerText);
           for (let row of rows) {
             ch.checked ? row.classList.add('rows-selected')
               : row.classList.remove('rows-selected')
