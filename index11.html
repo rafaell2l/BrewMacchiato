@@ -362,7 +362,7 @@
         }*/
 
         function evRighe(checkbox) {
-            const categoryName = checkbox.closest('tr').querySelector('td:first-child').textContent;
+            let categoryName = checkbox.closest('tr').querySelector('td:first-child').textContent;
             if (categoryName === "Uncategorized") {categoryName=""};
             document.querySelectorAll('#laps-body tr').forEach(row => {
                 const rowCategory = row.querySelector('td:nth-child(6) textarea').value.trim();
@@ -376,18 +376,20 @@
             const startTimestamp = document.getElementById("start-timestamp").innerText.replace("Start Time: ", "");
             const stopTimestamp = running ? formatTimestamp(new Date()) : document.getElementById("stop-timestamp").innerText.replace("Stop Time: ", "");
             const globalDuration = formatTime(elapsedTime);
-            let summary = `Stopwatch Summary\nStart: ${startTimestamp}\nStop: ${stopTimestamp}\nDuration: ${globalDuration}\nLaps:\n`;
+            let summary = `Stopwatch Summary\nStart: ${startTimestamp}\nStop: ${stopTimestamp}\nDuration: ${globalDuration}\n\n`;
+
+            const totals = calculateCategoryTotals();
+            summary += 'Category Totals:\n';
+            Object.entries(totals).forEach(([category, {count, total}]) => {
+                summary += `${formatTime(total)}\t${count}\t${category}\n`;
+            });
+
+            summary += 'Laps:\n\n'
 
             lapsData.forEach(lap => {
                 summary += `Lap ${lap.lap}: ${lap.duration} (Start: ${lap.start}, Stop: ${lap.stop})\n`;
                 if (lap.note.trim()) summary += `  Notes: ${lap.note}\n`;
                 if (lap.category.trim()) summary += `  Category: ${lap.category}\n`;
-            });
-
-            const totals = calculateCategoryTotals();
-            summary += '\nCategory Totals:\n';
-            Object.entries(totals).forEach(([category, {count, total}]) => {
-                summary += `${formatTime(total)}\t${count}\t${category}\n`;
             });
 
             document.getElementById("summary").value = summary;
