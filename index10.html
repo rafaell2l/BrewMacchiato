@@ -78,7 +78,7 @@
             background-color: #f2f2f2;
         }
         .rows-selected {
-          background-color: #85beff;
+          background-color: #F0F1F5;
         }
     </style>
 </head>
@@ -331,10 +331,10 @@
         function evRighe(ch) {
           const rows = document.getElementsByClassName('rows');
           //alert(ch.parentElement.firstElementChild.innerText);
-          alert(ch.parentElement.parentElement.firstElementChild.innerText);
-          alert(ch.parentElement.parentElement.firstElementChild.value);
+          //alert(ch.parentElement.parentElement.firstElementChild.innerText);
+          //alert(ch.parentElement.parentElement.firstElementChild.value);
           for (let row of rows) {
-              alert(row.lastElementChild.firstElementChild.value);
+              //alert(row.lastElementChild.firstElementChild.value);
               if (ch.parentElement.parentElement.firstElementChild.innerText === row.lastElementChild.firstElementChild.value) {
             ch.checked ? row.classList.add('rows-selected')
               : row.classList.remove('rows-selected')
