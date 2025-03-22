@@ -332,7 +332,9 @@
           const rows = document.getElementsByClassName('rows');
           //alert(ch.parentElement.firstElementChild.innerText);
           //alert(ch.parentElement.parentElement.firstElementChild.innerText);
+          alert(ch.parentElement.parentElement.firstElementChild.value);
           for (let row of rows) {
+              alert(row.lastElementChild.firstElementChild.value);
               if (ch.parentElement.parentElement.firstElementChild.value === row.lastElementChild.firstElementChild.value) {
             ch.checked ? row.classList.add('rows-selected')
               : row.classList.remove('rows-selected')
