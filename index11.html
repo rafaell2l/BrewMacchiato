@@ -336,10 +336,10 @@
             let html = '<h3>Category Totals</h3><table class="totals-table">';
             html += '<tr><th>Category</th><th>Total Duration</th><th>Laps</th><th>Rows</th></tr>';
             
-            Object.entries(totals).forEach(([category, totalMs]) => {
+            Object.entries(totals).forEach(([category, {total, count}]) => {
                 html += `<tr>
                     <td>${category}</td>
-                    <td class="${getDurationClass(totalMs)}">${formatTime(totalMs)}</td>
+                    <td class="${getDurationClass(total)}">${formatTime(total)}</td>
                     <td>${count}</td>
                     <td><input type="checkbox" onchange="evRighe(this)"></td>
                 </tr>`;
