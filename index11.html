@@ -362,15 +362,15 @@
         }*/
 
         function evRighe(checkbox) {
-  const categoryName = checkbox.closest('tr').querySelector('td:first-child').textContent;
-  
-  document.querySelectorAll('#laps-body tr').forEach(row => {
-    const rowCategory = row.querySelector('td:nth-child(6) textarea').value.trim();
-    if (rowCategory === categoryName) {
-      row.classList.toggle('rows-selected', checkbox.checked);
-    }
-  });
-}
+            const categoryName = checkbox.closest('tr').querySelector('td:first-child').textContent;
+            if (categoryName === "Uncategorized") {categoryName=""};
+            document.querySelectorAll('#laps-body tr').forEach(row => {
+                const rowCategory = row.querySelector('td:nth-child(6) textarea').value.trim();
+                if (rowCategory === categoryName) {
+                    row.classList.toggle('rows-selected', checkbox.checked);
+                }
+            });
+        }
 
         function generateSummary() {
             const startTimestamp = document.getElementById("start-timestamp").innerText.replace("Start Time: ", "");
@@ -387,7 +387,7 @@
             const totals = calculateCategoryTotals();
             summary += '\nCategory Totals:\n';
             Object.entries(totals).forEach(([category, {count, total}]) => {
-                summary += `${category}: ${formatTime(total)}\n`;
+                summary += `${formatTime(total)}\t${count}\t${category}\n`;
             });
 
             document.getElementById("summary").value = summary;
