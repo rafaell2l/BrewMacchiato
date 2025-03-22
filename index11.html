@@ -168,7 +168,7 @@
                 lapsData,
                 lapCount,
                 stopTime: document.getElementById("stop-timestamp").innerText.replace("Stop Time: ", ""),
-                categories: calculateCategoryTotals();
+                categories: calculateCategoryTotals()
             };
             localStorage.setItem("stopwatchState", JSON.stringify(state));
         }
