@@ -321,16 +321,17 @@
                 html += `<tr>
                     <td>${category}</td>
                     <td class="${getDurationClass(totalMs)}">${formatTime(totalMs)}</td>
-                    <td><input type="checkbox" onchange="evRighe(this, this.parentElement.firstElementChild)"></td>
+                    <td><input type="checkbox" onchange="evRighe(this)"></td>
                 </tr>`;
             });
             
             html += '</table>';
             document.getElementById('category-totals').innerHTML = html;
         }
-        function evRighe(ch, pr) {
+        function evRighe(ch) {
           const rows = document.getElementsByClassName('rows');
-          alert(pr.innerText);
+          alert(this.parentElement.firstElementChild.innerText);
+          alert(this.parentElement.parentElement.firstElementChild.innerText);
           for (let row of rows) {
             ch.checked ? row.classList.add('rows-selected')
               : row.classList.remove('rows-selected')
