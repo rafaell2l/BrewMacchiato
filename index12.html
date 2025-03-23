@@ -386,8 +386,15 @@
             let summary = `Stopwatch Summary\nStart: ${startTimestamp}\nStop: ${stopTimestamp}\nDuration: ${globalDuration}\n\n`;
 
             const totals = calculateCategoryTotals();
+
+            // Sort by total duration in descending order
+            const sortedCategories = Object.entries(totals).sort((a, b) => 
+              b[1].total - a[1].total // Compare duration values
+            );
+            
             summary += 'Category Totals:\n';
-            Object.entries(totals).forEach(([category, {count, total}]) => {
+            //Object.entries(totals).forEach(([category, {count, total}]) => {
+            sortedCategories.forEach(([category, {count, total}]) => {
                 summary += `${formatTime(total)}\t${count}\t${category}\n`;
             });
 
