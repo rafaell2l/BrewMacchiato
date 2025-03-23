@@ -1,1 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch with Categories</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        #display, #current-lap {
+            font-size: 2em;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+        #current-lap {
+            font-size: 1.5em;
+        }
+        .timestamp {
+            font-size: 1em;
+            color: darkblue;
+            margin-top: 5px;
+        }
+        button {
+            font-size: 1em;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        #laps-container {
+            margin-top: 20px;
+            display: inline-block;
+            width: 100%;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+            font-family: monospace;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        textarea {
+            width: 95%;
+            font-size: 1em;
+            resize: vertical;
+        }
+        #summary, #csv-content {
+            height: 120px;
+            margin-bottom: 10px;
+        }
+        .copy-button {
+            margin-top: 5px;
+        }
+        .green { color: green; }
+        .orange { color: darkorange; }
+        .red { color: red; }
+        .red-hour { color: red; background: seashell;}
+        .totals-table {
+            width: 50%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        .totals-table th, .totals-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        .totals-table th {
+            background-color: #f2f2f2;
+        }
+        .rows-selected {
+          /*background-color: #F0F1F5;*/
+          background-color: #FFE6CC;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stopwatch v5</h1>
+    <textarea id="csv-content" placeholder="CSV content will appear here..." readonly></textarea>
+    <button class="copy-button" onclick="copyToClipboard('csv-content')">Copy CSV to Clipboard</button>
+    <textarea id="summary" placeholder="Summary will appear here..." readonly></textarea>
+    <button class="copy-button" onclick="copyToClipboard('summary')">Copy Summary to Clipboard</button>
+    <button class="copy-button" onclick="updateTextAreas()">Update Text Areas</button>
+    <div id="display">00:00:00:000</div>
+    <div id="current-lap">Lap Time: 00:00:00:000</div>
+    <p id="start-timestamp" class="timestamp">Start Time: --</p>
+    <p id="stop-timestamp" class="timestamp">Stop Time: --</p>
+    <button onclick="startStopwatch()">Start</button>
+    <button onclick="stopStopwatch()">Stop</button>
+    <button onclick="resetStopwatch()">Reset</button>
+    <button onclick="recordLap()">Lap</button>
+    <div id="laps-container">
+        <table id="laps-table">
+            <thead>
+                <tr>
+                    <th>Lap</th>
+                    <th>Duration</th>
+                    <th>Start</th>
+                    <th>Stop</th>
+                    <th>Notes</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+            <tbody id="laps-body"></tbody>
+        </table>
+    </div>
+    <div id="category-totals"></div>
 
+    <script>
+        let startTime = null;
+        let elapsedTime = 0;
+        let timerInterval;
+        let running = false;
+        let lastLapTimestamp = null;
+        let lapsData = [];
+        let lapCount = 1;
+
+        function loadState() {
+            const savedState = localStorage.getItem("stopwatchState");
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                startTime = state.startTime ? new Date(state.startTime) : null;
+                running = state.running;
+                lapCount = state.lapCount;
+                lapsData = state.lapsData;
+                elapsedTime = state.elapsedTime;
+                lastLapTimestamp = state.lastLapTimestamp ? new Date(state.lastLapTimestamp) : null;
+
+                document.getElementById("display").innerText = formatTime(elapsedTime);
+                document.getElementById("start-timestamp").innerText = "Start Time: " + (state.startTime ? formatTimestamp(new Date(state.startTime)) : "--");
+                document.getElementById("stop-timestamp").innerText = "Stop Time: " + (state.stopTime || "--");
+
+                lapsData.forEach((lap, index) => {
+                    const lapRow = document.createElement("tr");
+                    lapRow.innerHTML = `
+                        <td><strong>${lap.lap}</strong></td>
+                        <td class="${getDurationClass(parseTime(lap.duration))}">${lap.duration}</td>
+                        <td>${lap.start}</td>
+                        <td>${lap.stop}</td>
+                        <td><textarea oninput="updateNote(${index}, this.value)">${lap.note}</textarea></td>
+                        <td><textarea oninput="updateCategory(${index}, this.value)">${lap.category}</textarea></td>
+                    `;
+                    document.getElementById("laps-body").appendChild(lapRow);
+                });
+
+                if (running) {
+                    timerInterval = setInterval(updateDisplay, 10);
+                }
+                updateCurrentLapTime();
+                updateCategoryTotals();
+            }
+        }
+
+        function saveState() {
+            const state = {
+                startTime: startTime ? startTime.toISOString() : null,
+                elapsedTime,
+                running,
+                lastLapTimestamp: lastLapTimestamp ? lastLapTimestamp.toISOString() : null,
+                lapsData,
+                lapCount,
+                stopTime: document.getElementById("stop-timestamp").innerText.replace("Stop Time: ", ""),
+                categories: calculateCategoryTotals()
+            };
+            localStorage.setItem("stopwatchState", JSON.stringify(state));
+        }
+
+        function parseTime(timeString) {
+            const [hours, minutes, seconds, milliseconds] = timeString.split(":").map(Number);
+            return hours * 3600000 + minutes * 60000 + seconds * 1000 + milliseconds;
+        }
+
+        function startStopwatch() {
+            if (!running) {
+                startTime = startTime || new Date();
+                lastLapTimestamp = lastLapTimestamp || startTime;
+                timerInterval = setInterval(updateDisplay, 10);
+                running = true;
+                document.getElementById("start-timestamp").innerText = "Start Time: " + formatTimestamp(startTime);
+                saveState();
+            }
+        }
+
+        function stopStopwatch() {
+            if (running) {
+                clearInterval(timerInterval);
+                elapsedTime = Date.now() - startTime.getTime();
+                running = false;
+                document.getElementById("stop-timestamp").innerText = "Stop Time: " + formatTimestamp(new Date());
+                updateTextAreas();
+                saveState();
+            }
+        }
+
+        function resetStopwatch() {
+            clearInterval(timerInterval);
+            elapsedTime = 0;
+            running = false;
+            lastLapTimestamp = null;
+            lapsData = [];
+            lapCount = 1;
+            startTime = null;
+            document.getElementById("display").innerText = "00:00:00:000";
+            document.getElementById("current-lap").innerHTML = "Lap Time: <span class='green'>00:00:00:000</span>";
+            document.getElementById("laps-body").innerHTML = "";
+            document.getElementById("summary").value = "";
+            document.getElementById("csv-content").value = "";
+            document.getElementById("start-timestamp").innerText = "Start Time: --";
+            document.getElementById("stop-timestamp").innerText = "Stop Time: --";
+            document.getElementById("category-totals").innerHTML = "";
+            localStorage.removeItem("stopwatchState");
+        }
+
+        function updateDisplay() {
+            elapsedTime = Date.now() - startTime.getTime();
+            document.getElementById("display").innerText = formatTime(elapsedTime);
+            updateCurrentLapTime();
+        }
+
+        function updateCurrentLapTime() {
+            const now = Date.now();
+            const currentLapTime = lastLapTimestamp ? now - lastLapTimestamp.getTime() : elapsedTime;
+            const colorClass = getDurationClass(currentLapTime);
+            document.getElementById("current-lap").innerHTML = 
+                `Lap Time: <span class="${colorClass}">${formatTime(currentLapTime)}</span>`;
+        }
+
+        function formatTime(time) {
+            let hours = Math.floor(time / 3600000);
+            let minutes = Math.floor((time % 3600000) / 60000);
+            let seconds = Math.floor((time % 60000) / 1000);
+            let milliseconds = time % 1000;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}:${String(milliseconds).padStart(3, '0')}`;
+        }
+
+        function formatTimestamp(date) {
+            return date.toLocaleString();
+        }
+
+        function recordLap() {
+            if (running) {
+                const now = new Date();
+                const lapTime = lastLapTimestamp ? now - lastLapTimestamp.getTime() : elapsedTime;
+                const lapStart = lastLapTimestamp || startTime;
+                const lapStop = now;
+                lastLapTimestamp = now;
+
+                const colorClass = getDurationClass(lapTime);
+                const lapRow = document.createElement("tr");
+                lapRow.classList.add('rows');
+                lapRow.innerHTML = `
+                    <td><strong>${lapCount}</strong></td>
+                    <td class="${colorClass}">${formatTime(lapTime)}</td>
+                    <td>${formatTimestamp(lapStart)}</td>
+                    <td>${formatTimestamp(lapStop)}</td>
+                    <td><textarea oninput="updateNote(${lapCount - 1}, this.value)"></textarea></td>
+                    <td><textarea oninput="updateCategory(${lapCount - 1}, this.value)"></textarea></td>
+                `;
+                document.getElementById("laps-body").appendChild(lapRow);
+
+                lapsData.push({
+                    lap: lapCount,
+                    duration: formatTime(lapTime),
+                    start: formatTimestamp(lapStart),
+                    stop: formatTimestamp(lapStop),
+                    note: "",
+                    category: ""
+                });
+
+                lapCount++;
+                saveState();
+                updateCurrentLapTime();
+                updateCategoryTotals();
+            }
+        }
+
+        function getDurationClass(time) {
+            if (time < 180000) return 'green';
+            if (time >= 2700000) return 'red-hour';
+            if (time >= 1080000) return 'red';
+        }
+
+        function updateNote(index, text) {
+            if (lapsData[index]) {
+                lapsData[index].note = text;
+                saveState();
+            }
+        }
+
+        function updateCategory(index, text) {
+            if (lapsData[index]) {
+                lapsData[index].category = text;
+                saveState();
+                updateCategoryTotals();
+            }
+        }
+
+        /*function calculateCategoryTotals() {
+            const totals = {};
+            lapsData.forEach(lap => {
+                const category = lap.category.trim() || 'Uncategorized';
+                const durationMs = parseTime(lap.duration);
+                totals[category] = (totals[category] || 0) + durationMs;
+            });
+            return totals;
+        }*/
+
+      function calculateCategoryTotals() {
+        const totals = {};
+        lapsData.forEach(lap => {
+          const category = lap.category.trim() || 'Uncategorized';
+          const durationMs = parseTime(lap.duration);
+          
+          if (!totals[category]) {
+            totals[category] = {
+              count: 0,
+              total: 0
+            };
+          }
+          totals[category].count++;
+          totals[category].total += durationMs;
+        });
+        return totals;
+      }
+
+        function updateCategoryTotals() {
+            const totals = calculateCategoryTotals();
+            let html = '<h3>Category Totals</h3><table class="totals-table">';
+            html += '<tr><th>Category</th><th>Total Duration</th><th>Laps</th><th>Rows</th></tr>';
+
+            // Sort by total duration in descending order
+            const sortedCategories = Object.entries(totals).sort((a, b) => 
+              b[1].total - a[1].total // Compare duration values
+            );
+            
+            //Object.entries(totals).forEach(([category, {count, total}]) => {
+            sortedCategories.forEach(([category, {count, total}]) => {
+                html += `<tr>
+                    <td>${category}</td>
+                    <td class="${getDurationClass(total)}">${formatTime(total)}</td>
+                    <td>${count}</td>
+                    <td><input type="checkbox" onchange="evRighe(this)"></td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+            document.getElementById('category-totals').innerHTML = html;
+        }
+        /*function evRighe(ch) {
+          const rows = document.getElementsByClassName('rows');
+          //alert(ch.parentElement.firstElementChild.innerText);
+          //alert(ch.parentElement.parentElement.firstElementChild.innerText);
+          //alert(ch.parentElement.parentElement.firstElementChild.value);
+          for (let row of rows) {
+              //alert(row.lastElementChild.firstElementChild.value);
+              if (ch.parentElement.parentElement.firstElementChild.innerText === row.lastElementChild.firstElementChild.value) {
+            ch.checked ? row.classList.add('rows-selected')
+              : row.classList.remove('rows-selected')
+          }}
+        }*/
+
+        function evRighe(checkbox) {
+            let categoryName = checkbox.closest('tr').querySelector('td:first-child').textContent;
+            if (categoryName === "Uncategorized") {categoryName=""};
+            document.querySelectorAll('#laps-body tr').forEach(row => {
+                const rowCategory = row.querySelector('td:nth-child(6) textarea').value.trim();
+                if (rowCategory === categoryName) {
+                    row.classList.toggle('rows-selected', checkbox.checked);
+                }
+            });
+        }
+
+        function generateSummary() {
+            const startTimestamp = document.getElementById("start-timestamp").innerText.replace("Start Time: ", "");
+            const stopTimestamp = running ? formatTimestamp(new Date()) : document.getElementById("stop-timestamp").innerText.replace("Stop Time: ", "");
+            const globalDuration = formatTime(elapsedTime);
+            let summary = `Stopwatch Summary\nStart: ${startTimestamp}\nStop: ${stopTimestamp}\nDuration: ${globalDuration}\n\n`;
+
+            const totals = calculateCategoryTotals();
+            summary += 'Category Totals:\n';
+            Object.entries(totals).forEach(([category, {count, total}]) => {
+                summary += `${formatTime(total)}\t${count}\t${category}\n`;
+            });
+
+            summary += '\nLaps:\n\n'
+
+            lapsData.forEach(lap => {
+                summary += `Lap ${lap.lap}: ${lap.duration} (Start: ${lap.start}, Stop: ${lap.stop})\n`;
+                if (lap.note.trim()) summary += `  Notes: ${lap.note}\n`;
+                if (lap.category.trim()) summary += `  Category: ${lap.category}\n\n`;
+            });
+
+            document.getElementById("summary").value = summary;
+        }
+
+        function generateCSV() {
+            let csvContent = "Lap;Duration;Start;Stop;Notes;Category\n";
+            lapsData.forEach(lap => {
+                csvContent += `${lap.lap};${lap.duration};${lap.start};${lap.stop};"${lap.note}";"${lap.category}"\n`;
+            });
+            document.getElementById("csv-content").value = csvContent;
+        }
+
+        function updateTextAreas() {
+            generateCSV();
+            generateSummary();
+            updateCategoryTotals();
+        }
+
+        function copyToClipboard(textareaId) {
+            const textarea = document.getElementById(textareaId);
+            navigator.clipboard.writeText(textarea.value)
+                .then(() => alert("Copied to clipboard!"))
+                .catch(() => alert("Copy failed"));
+        }
+
+        window.onload = loadState;
+    </script>
+</body>
+</html>
