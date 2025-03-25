@@ -247,6 +247,28 @@
             return date.toLocaleString();
         }
 
+        function formatTimestamp2(date) {
+            // Create a Date object (you can replace this with your desired date)
+            const date = new Date(); // Current date
+
+            // Format the date as "year - month - day"
+            const yearMonthDay = new Intl.DateTimeFormat('it-IT', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }).format(date);
+            
+            // Format the day of the week in Italian
+            const dayOfWeek = new Intl.DateTimeFormat('it-IT', {
+              weekday: 'long'
+            }).format(date);
+            
+            // Combine the formatted parts into the desired output
+            const formattedDate = `${yearMonthDay} ${dayOfWeek}`;
+            
+            return formattedDate;
+        }
+
         function recordLap() {
             if (running) {
                 const now = new Date();
@@ -384,7 +406,8 @@
             const startTimestamp = document.getElementById("start-timestamp").innerText.replace("Start Time: ", "");
             const stopTimestamp = running ? formatTimestamp(new Date()) : document.getElementById("stop-timestamp").innerText.replace("Stop Time: ", "");
             const globalDuration = formatTime(elapsedTime);
-            let summary = `Stopwatch Summary\nStart: ${startTimestamp}\nStop: ${stopTimestamp}\nDuration: ${globalDuration}\n\n`;
+            let summary = `${formatTimestamp2(startTimestamp)}\n\n`;
+            summary += `Stopwatch Summary\nStart: ${startTimestamp}\nStop: ${stopTimestamp}\nDuration: ${globalDuration}\n\n`;
 
             const totals = calculateCategoryTotals();
 
