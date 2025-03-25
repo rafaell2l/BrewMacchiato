@@ -136,7 +136,6 @@
                 elapsedTime = state.elapsedTime;
                 lastLapTimestamp = state.lastLapTimestamp ? new Date(state.lastLapTimestamp) : null;
 
-                document.getElementById("giorno").innerText = formatTimestamp2(state.startTime) || "--";
                 document.getElementById("display").innerText = formatTime(elapsedTime);
                 document.getElementById("start-timestamp").innerText = "Start Time: " + (state.startTime ? formatTimestamp(new Date(state.startTime)) : "--");
                 document.getElementById("stop-timestamp").innerText = "Stop Time: " + (state.stopTime || "--");
