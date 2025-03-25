@@ -84,7 +84,7 @@
     </style>
 </head>
 <body>
-    <h1>Stopwatch v5</h1>
+    <h1 id="giorno">Stopwatch v5</h1>
     <textarea id="csv-content" placeholder="CSV content will appear here..." readonly></textarea>
     <button class="copy-button" onclick="copyToClipboard('csv-content')">Copy CSV to Clipboard</button>
     <textarea id="summary" placeholder="Summary will appear here..." readonly></textarea>
@@ -136,6 +136,7 @@
                 elapsedTime = state.elapsedTime;
                 lastLapTimestamp = state.lastLapTimestamp ? new Date(state.lastLapTimestamp) : null;
 
+                document.getElementById("giorno").innerText = formatTimestamp2(state.startTime) || "--";
                 document.getElementById("display").innerText = formatTime(elapsedTime);
                 document.getElementById("start-timestamp").innerText = "Start Time: " + (state.startTime ? formatTimestamp(new Date(state.startTime)) : "--");
                 document.getElementById("stop-timestamp").innerText = "Stop Time: " + (state.stopTime || "--");
