@@ -247,23 +247,33 @@
             return date.toLocaleString();
         }
 
-        function formatTimestamp2(date) {
-            // Create a Date object (you can replace this with your desired date)
-            //const date = new Date(); // Current date
-
-            // Format the date as "year - month - day"
+        function formatTimestamp2(inputString) {
+            // Input string
+            //const inputString = "24/03/2025, 06:17:00";
+            
+            // Step 1: Parse the input string
+            // Split the date and time parts
+            const [datePart, timePart] = inputString.split(', ');
+            
+            // Split the date part into day, month, and year
+            const [day, month, year] = datePart.split('/').map(Number);
+            
+            // Create a Date object (Note: Month is 0-based in JavaScript)
+            const date = new Date(year, month - 1, day);
+            
+            // Step 2: Format the date as "year - month - day"
             const yearMonthDay = new Intl.DateTimeFormat('it-IT', {
               year: 'numeric',
               month: '2-digit',
               day: '2-digit'
             }).format(date);
             
-            // Format the day of the week in Italian
+            // Step 3: Get the day of the week in Italian
             const dayOfWeek = new Intl.DateTimeFormat('it-IT', {
               weekday: 'long'
             }).format(date);
             
-            // Combine the formatted parts into the desired output
+            // Step 4: Combine the formatted date and the day of the week
             const formattedDate = `${yearMonthDay} ${dayOfWeek}`;
             
             return formattedDate;
