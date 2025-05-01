@@ -57,6 +57,9 @@
             height: 120px;
             margin-bottom: 10px;
         }
+        #general-notes{
+            height: 300px;
+        }
         .copy-button {
             margin-top: 5px;
         }
@@ -115,6 +118,7 @@
         </table>
     </div>
     <div id="category-totals"></div>
+    <textarea id="general-notes" placeholder="General Notes..." oninput="saveState()"></textarea>
 
     <script>
         let startTime = null;
@@ -135,10 +139,12 @@
                 lapsData = state.lapsData;
                 elapsedTime = state.elapsedTime;
                 lastLapTimestamp = state.lastLapTimestamp ? new Date(state.lastLapTimestamp) : null;
+                generalNotes = state.generalNotes || ""; // Load general notes
 
                 document.getElementById("display").innerText = formatTime(elapsedTime);
                 document.getElementById("start-timestamp").innerText = "Start Time: " + (state.startTime ? formatTimestamp(new Date(state.startTime)) : "--");
                 document.getElementById("stop-timestamp").innerText = "Stop Time: " + (state.stopTime || "--");
+                document.getElementById("general-notes").value = generalNotes; // Set text area value
 
                 lapsData.forEach((lap, index) => {
                     const lapRow = document.createElement("tr");
@@ -162,6 +168,7 @@
         }
 
         function saveState() {
+            generalNotes = document.getElementById("general-notes").value;
             const state = {
                 startTime: startTime ? startTime.toISOString() : null,
                 elapsedTime,
@@ -170,7 +177,8 @@
                 lapsData,
                 lapCount,
                 stopTime: document.getElementById("stop-timestamp").innerText.replace("Stop Time: ", ""),
-                categories: calculateCategoryTotals()
+                categories: calculateCategoryTotals(),
+                generalNotes: generalNotes // Save general notes
             };
             localStorage.setItem("stopwatchState", JSON.stringify(state));
         }
@@ -210,11 +218,13 @@
             lapsData = [];
             lapCount = 1;
             startTime = null;
+            generalNotes = ""; // Clear notes variable
             document.getElementById("display").innerText = "00:00:00:000";
             document.getElementById("current-lap").innerHTML = "Lap Time: <span class='green'>00:00:00:000</span>";
             document.getElementById("laps-body").innerHTML = "";
             document.getElementById("summary").value = "";
             document.getElementById("csv-content").value = "";
+            document.getElementById("general-notes").value = ""; // Clear notes textarea
             document.getElementById("start-timestamp").innerText = "Start Time: --";
             document.getElementById("stop-timestamp").innerText = "Stop Time: --";
             document.getElementById("category-totals").innerHTML = "";
@@ -431,6 +441,13 @@
             sortedCategories.forEach(([category, {count, total}]) => {
                 summary += `${formatTime(total)}\t${count}\t${category}\n`;
             });
+
+            // --- Include General Notes ---
+            const generalNotesValue = document.getElementById("general-notes").value;
+            if (generalNotesValue.trim()) {
+                 summary += 'General Notes:\n' + generalNotesValue.trim() + '\n\n';
+            }
+            // ---------------------------
 
             summary += '\nLaps:\n\n'
 
