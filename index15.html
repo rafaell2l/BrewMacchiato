@@ -127,6 +127,7 @@
     <div id="category-totals"></div>
     <br>
     <textarea id="general-notes" placeholder="Oggi..." oninput="saveState()"></textarea>
+    <br>
     <textarea id="general-notes2" placeholder="General Notes..." oninput="saveState()"></textarea>
 
     <script>
@@ -190,7 +191,7 @@
                 stopTime: document.getElementById("stop-timestamp").innerText.replace("Stop Time: ", ""),
                 categories: calculateCategoryTotals(),
                 generalNotes: generalNotes, // Save general notes
-                generalNotes2: generalNotes2, // Save general notes
+                generalNotes2: generalNotes2 // Save general notes
             };
             localStorage.setItem("stopwatchState", JSON.stringify(state));
         }
@@ -463,7 +464,7 @@
 
             // --- Include General Notes ---
             const generalNotesValue2 = document.getElementById("general-notes2").value;
-            if (generalNotesValue.trim()) {
+            if (generalNotesValue2.trim()) {
                  summary += '\nGeneral Notes:\n' + generalNotesValue2.trim() + '\n\n';
             }
             // ---------------------------
