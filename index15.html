@@ -140,8 +140,10 @@
 
         function loadState() {
             const savedState = localStorage.getItem("stopwatchState");
+            const savedState2 = localStorage.getItem("stopwatchState2");
             if (savedState) {
                 const state = JSON.parse(savedState);
+                const state2 = JSON.parse(savedState2);
                 startTime = state.startTime ? new Date(state.startTime) : null;
                 running = state.running;
                 lapCount = state.lapCount;
@@ -149,7 +151,7 @@
                 elapsedTime = state.elapsedTime;
                 lastLapTimestamp = state.lastLapTimestamp ? new Date(state.lastLapTimestamp) : null;
                 generalNotes = state.generalNotes || ""; // Load general notes
-                generalNotes2 = state.generalNotes2 || ""; // Load general notes
+                generalNotes2 = state2.generalNotes2 || ""; // Load general notes
 
                 document.getElementById("display").innerText = formatTime(elapsedTime);
                 document.getElementById("start-timestamp").innerText = "Start Time: " + (state.startTime ? formatTimestamp(new Date(state.startTime)) : "--");
@@ -193,7 +195,9 @@
                 generalNotes: generalNotes, // Save general notes
                 generalNotes2: generalNotes2 // Save general notes
             };
+            const state2 = state;
             localStorage.setItem("stopwatchState", JSON.stringify(state));
+            localStorage.setItem("stopwatchState2", JSON.stringify(state));
         }
 
         function parseTime(timeString) {
