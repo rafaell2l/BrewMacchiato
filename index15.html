@@ -143,7 +143,7 @@
             const savedState2 = localStorage.getItem("stopwatchState2");
             if (savedState) {
                 const state = JSON.parse(savedState);
-                const state2 = JSON.parse(savedState2);
+                //const state2 = JSON.parse(savedState2);
                 startTime = state.startTime ? new Date(state.startTime) : null;
                 running = state.running;
                 lapCount = state.lapCount;
@@ -151,13 +151,13 @@
                 elapsedTime = state.elapsedTime;
                 lastLapTimestamp = state.lastLapTimestamp ? new Date(state.lastLapTimestamp) : null;
                 generalNotes = state.generalNotes || ""; // Load general notes
-                generalNotes2 = state2.generalNotes2 || ""; // Load general notes
+                //generalNotes2 = state2.generalNotes2 || ""; // Load general notes
 
                 document.getElementById("display").innerText = formatTime(elapsedTime);
                 document.getElementById("start-timestamp").innerText = "Start Time: " + (state.startTime ? formatTimestamp(new Date(state.startTime)) : "--");
                 document.getElementById("stop-timestamp").innerText = "Stop Time: " + (state.stopTime || "--");
                 document.getElementById("general-notes").value = generalNotes; // Set text area value
-                document.getElementById("general-notes2").value = generalNotes2; // Set text area value
+                //document.getElementById("general-notes2").value = generalNotes2; // Set text area value
 
                 lapsData.forEach((lap, index) => {
                     const lapRow = document.createElement("tr");
@@ -177,6 +177,11 @@
                 }
                 updateCurrentLapTime();
                 updateCategoryTotals();
+            }
+            if (savedState2) {
+                const state2 = JSON.parse(savedState2);
+                generalNotes2 = state2.generalNotes2 || ""; // Load general notes
+                document.getElementById("general-notes2").value = generalNotes2; // Set text area value
             }
         }
 
