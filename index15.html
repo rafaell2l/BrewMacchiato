@@ -127,7 +127,6 @@
     <div id="category-totals"></div>
     <br>
     <textarea id="general-notes" placeholder="Oggi..." oninput="saveState()"></textarea>
-    <br>
     <textarea id="general-notes2" placeholder="General Notes..." oninput="saveState()"></textarea>
 
     <script>
@@ -181,6 +180,7 @@
 
         function saveState() {
             generalNotes = document.getElementById("general-notes").value;
+            generalNotes2 = document.getElementById("general-notes2").value;
             const state = {
                 startTime: startTime ? startTime.toISOString() : null,
                 elapsedTime,
