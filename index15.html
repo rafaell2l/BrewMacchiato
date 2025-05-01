@@ -195,7 +195,10 @@
                 generalNotes: generalNotes, // Save general notes
                 generalNotes2: generalNotes2 // Save general notes
             };
-            const state2 = state;
+            const state2 = {
+                generalNotes2: generalNotes2 // Save general notes
+            };
+            //const state2 = state;
             localStorage.setItem("stopwatchState", JSON.stringify(state));
             localStorage.setItem("stopwatchState2", JSON.stringify(state2));
         }
